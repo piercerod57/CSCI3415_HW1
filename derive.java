@@ -3,6 +3,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
 * Derive Hint Program
@@ -159,6 +161,21 @@ class Derive {
 	}
 	
 	//------
+	public int step;
+	
+	class ParsedDerivation
+	{
+		String lhs;
+		String rhs;
+	}
+	
+	String GatherSentenceFromUser()
+	{
+		System.out.println("\nPlease input the sentence you wish to parse the leftmost derivation of:");
+		String sentence = System.console().readLine();
+		return sentence;
+	}
+	
 	boolean TestAgainstRule(String rhsRuleStr, String token)
 	{
 		if(rhsRuleStr.contains(token))
@@ -171,59 +188,89 @@ class Derive {
 		}
 	}
 	
-	String ParseRule(String token, ArrayList<Rule> rules, int step)
+	String ParseRule(String token, ArrayList<Rule> rules)
 	{
 		for(Rule rule : rules)
 		{
 			String parsedString = new String();
 			for(String testRule : rule.rhs)
 			{	
+				System.out.println(step + ": \t" + testRule);
+				++step;
 				if(TestAgainstRule(token, testRule))
 				{
 					parsedString = rule.lhs + " -> " + String.join(" ", rule.rhs);
 					return parsedString;
 				}
+				
 			}
 		}
 		return "%no_match%";
 	}
 	
-	String GatherSentenceFromUser()
+	
+	Rule MatchRuleVsSentence(ArrayList<Rule> rules, String sentence)
 	{
-		System.out.println("\nPlease input the sentence you wish to parse the leftmost derivation of:");
-		String sentence = System.console().readLine();
-		return sentence;
+		for(Rule rule : rules)
+		{
+			String regExedRule = String.join(" ", rule.rhs).replaceAll("(<\\w*>)", "(.*)");
+			System.out.println(regExedRule + "\t" + sentence.matches(regExedRule));
+			
+			if(sentence.matches(regExedRule) || sentence == regExedRule)
+			{
+				return rule;
+			}
+		}
+		return null;
 	}
 	
 	
 	void ExecuteLeftMostDerivation(Grammar grammar, String sentence)
 	{
 		System.out.println("Sentence:\n" + sentence + "\nDerivation:");
+		step = 1;
 		ArrayList<String> tokens = new ArrayList<String>();
-		int step = 1;
-		
 		ArrayList<String> leftHandDerivation = new ArrayList<String>();
 		
-        for (String a: sentence.split(" "))
+		ParsedDerivation pdCurrent = new ParsedDerivation();
+		
+		leftHandDerivation.add(grammar.rules.get(0).lhs);
+		leftHandDerivation.add(" -> ");
+		leftHandDerivation.addAll(grammar.rules.get(0).rhs);
+		
+		if(MatchRuleVsSentence(grammar.rules, sentence) != null)
+		{
+			leftHandDerivation = MatchRuleVsSentence(grammar.rules, sentence).rhs;
+			System.out.println(step + ": \t" + String.join(" ", leftHandDerivation));
+			++step;
+		}
+		else
+		{
+			//exit
+		}
+		
+		for (String a: sentence.split(" "))
 		{
 			tokens.add(a);
 		}
+		//System.out.println(tokens);
 		
-		
-		leftHandDerivation.addAll(Arrays.asList(ParseRule(tokens.get(0), grammar.rules, step).split(" ")));
-		if(leftHandDerivation.get(0) == "%no_match%"){System.out.println("Match not found..."); System.exit(0);}
-		System.out.println(step + ": " + String.join(" ", leftHandDerivation));
-		++step;
-		
-		
-		
-		for(String str : tokens)
+		for(int i=0; i < leftHandDerivation.size();++i)
 		{
-			//System.out.println(step);
-			ParseRule(str, grammar.rules, step);
-			//++step;
-		}
+			if(String.join(" ", leftHandDerivation).contains("<") || String.join(" ", leftHandDerivation).contains(">"))
+			{
+				pdCurrent.lhs = String.join(" ", leftHandDerivation.subList(0,i));
+				pdCurrent.rhs = String.join(" ", leftHandDerivation.subList(i,leftHandDerivation.size()));
+				System.out.println(i + pdCurrent.lhs);
+				System.out.println(i + pdCurrent.rhs);
+				if(pdCurrent.lhs != "")
+				{
+					MatchRuleVsSentence(grammar.rules, pdCurrent.lhs);
+				}
+			}
 		
+			
+		}
 	}
 	//-----
 }
