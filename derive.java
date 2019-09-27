@@ -50,6 +50,7 @@ class Derive {
 		grammar.readGrammar(filename);
 		grammar.printGrammar();
 		// A call to your derivation code will go here.
+		//@NOTE(P): loop?
 		String statement = GatherSentenceFromUser();
 		ExecuteLeftMostDerivation(grammar, statement);
 	}
@@ -158,15 +159,9 @@ class Derive {
 	}
 	
 	//------
-	class ParseTreeNode
+	boolean TestAgainstRule(String rhsRuleStr, String token)
 	{
-		String node;
-		ArrayList<ParseTreeNode> children;
-	}
-	
-	boolean TestAgainstRule(String rhsRuleStr, String sentenceStr)
-	{
-		if(rhsRuleStr.contains(sentenceStr))
+		if(rhsRuleStr.contains(token))
 		{
 			return true;
 		}
@@ -174,6 +169,23 @@ class Derive {
 		{
 			return false;
 		}
+	}
+	
+	String ParseRule(String token, ArrayList<Rule> rules, int step)
+	{
+		for(Rule rule : rules)
+		{
+			String parsedString = new String();
+			for(String testRule : rule.rhs)
+			{	
+				if(TestAgainstRule(token, testRule))
+				{
+					parsedString = rule.lhs + " -> " + String.join(" ", rule.rhs);
+					return parsedString;
+				}
+			}
+		}
+		return "%no_match%";
 	}
 	
 	String GatherSentenceFromUser()
@@ -187,33 +199,29 @@ class Derive {
 	void ExecuteLeftMostDerivation(Grammar grammar, String sentence)
 	{
 		System.out.println("Sentence:\n" + sentence + "\nDerivation:");
-		ArrayList<String> sentenceList = new ArrayList<String>();
-		ParseTreeNode parseTree = new ParseTreeNode();
+		ArrayList<String> tokens = new ArrayList<String>();
 		int step = 1;
-		String derivation = new String();
+		
+		ArrayList<String> leftHandDerivation = new ArrayList<String>();
 		
         for (String a: sentence.split(" "))
 		{
-			sentenceList.add(a);
-            //System.out.println(a);
+			tokens.add(a);
 		}
 		
-		for(String str : sentenceList)
+		
+		leftHandDerivation.addAll(Arrays.asList(ParseRule(tokens.get(0), grammar.rules, step).split(" ")));
+		if(leftHandDerivation.get(0) == "%no_match%"){System.out.println("Match not found..."); System.exit(0);}
+		System.out.println(step + ": " + String.join(" ", leftHandDerivation));
+		++step;
+		
+		
+		
+		for(String str : tokens)
 		{
-			for(Rule rule : grammar.rules)
-			{
-				for(String rhsRuleStr : rule.rhs)
-				{
-					if(TestAgainstRule(rhsRuleStr, str))
-					{
-						System.out.println(step+": "+ rhsRuleStr + str);
-						rule.printRule();
-						++step;
-					}
-				}
-				
-			}
-			
+			//System.out.println(step);
+			ParseRule(str, grammar.rules, step);
+			//++step;
 		}
 		
 	}
