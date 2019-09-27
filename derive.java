@@ -50,7 +50,7 @@ class Derive {
 		grammar.readGrammar(filename);
 		grammar.printGrammar();
 		// A call to your derivation code will go here.
-		String statement = GatherStatementFromUser();
+		String statement = GatherSentenceFromUser();
 		ExecuteLeftMostDerivation(grammar, statement);
 	}
 	
@@ -158,27 +158,64 @@ class Derive {
 	}
 	
 	//------
-	String GatherStatementFromUser()
+	class ParseTreeNode
 	{
-		System.out.println("\nPlease input the statement you wish to parse the leftmost derivation of:");
-		String statement = System.console().readLine();
-		return statement;
+		String node;
+		ArrayList<ParseTreeNode> children;
 	}
 	
-	void ExecuteLeftMostDerivation(Grammar grammar, String statement)
+	boolean TestAgainstRule(String rhsRuleStr, String sentenceStr)
 	{
-		System.out.println("Derivation:");
-		String derivation = new String();
-		int i = 1;
-		
-		while(statement != derivation)
+		if(rhsRuleStr.contains(sentenceStr))
 		{
-			System.out.println(i + ": ");
-			
-			
-			System.ou.println(derivation);
-			++i;
+			return true;
 		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	String GatherSentenceFromUser()
+	{
+		System.out.println("\nPlease input the sentence you wish to parse the leftmost derivation of:");
+		String sentence = System.console().readLine();
+		return sentence;
+	}
+	
+	
+	void ExecuteLeftMostDerivation(Grammar grammar, String sentence)
+	{
+		System.out.println("Sentence:\n" + sentence + "\nDerivation:");
+		ArrayList<String> sentenceList = new ArrayList<String>();
+		ParseTreeNode parseTree = new ParseTreeNode();
+		int step = 1;
+		String derivation = new String();
+		
+        for (String a: sentence.split(" "))
+		{
+			sentenceList.add(a);
+            //System.out.println(a);
+		}
+		
+		for(String str : sentenceList)
+		{
+			for(Rule rule : grammar.rules)
+			{
+				for(String rhsRuleStr : rule.rhs)
+				{
+					if(TestAgainstRule(rhsRuleStr, str))
+					{
+						System.out.println(step+": "+ rhsRuleStr + str);
+						rule.printRule();
+						++step;
+					}
+				}
+				
+			}
+			
+		}
+		
 	}
 	//-----
 }
