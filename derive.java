@@ -255,12 +255,12 @@ class Derive {
 		}
 		//System.out.println(tokens);
 		
-		for(int i=0; i < leftHandDerivation.size();++i)
+		for(int i=0; i < tokens.size();++i)
 		{
-			if(String.join(" ", leftHandDerivation).contains("<") || String.join(" ", leftHandDerivation).contains(">"))
+			//if(String.join(" ", leftHandDerivation).contains("<") || String.join(" ", leftHandDerivation).contains(">"))
 			{
-				pdCurrent.lhs = String.join(" ", leftHandDerivation.subList(0,i));
-				pdCurrent.rhs = String.join(" ", leftHandDerivation.subList(i,leftHandDerivation.size()));
+				pdCurrent.lhs = String.join(" ", tokens.subList(0,i));
+				pdCurrent.rhs = String.join(" ", tokens.subList(i,tokens.size()));
 				System.out.println(i + pdCurrent.lhs);
 				System.out.println(i + pdCurrent.rhs);
 				if(pdCurrent.lhs != "")
